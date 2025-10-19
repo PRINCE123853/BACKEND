@@ -10,5 +10,6 @@ const connectDB = async () => {
     process.exit(1)
   }
 }
+//we can use .then , .get after promises but accordingh to condiation
 
 export default connectDB
