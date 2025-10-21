@@ -3,7 +3,7 @@ class Apierror extends Error{// predefine error  "https://nodejs.org/api/errors.
     statusCode,
     message = "Something went wrong",
       errors = [],
-      statck = ""
+      stack = ""
   ){//override
    super(message)
    this.statusCode= statusCode
@@ -12,8 +12,8 @@ class Apierror extends Error{// predefine error  "https://nodejs.org/api/errors.
    this.success= false  //here we are handling api errors not api response
    this.errors= errors
 
-   if(statck){
-    this.stack= statck
+   if(stack){
+    this.stack= stack
    }else{
     Error.captureStackTrace(this, this.constructor)
    }
