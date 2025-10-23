@@ -59,7 +59,7 @@ userSchema.pre("save", async function (next){
   if(!this.isModified("password")) return next();// agar password modify nhi hua hai to aeise hi chhor do next page par lekar jao
  
   
-  this.password= bcrypt.hash(this.password, 10) // for encrepting(conert readable to secret data) the password // agar password change hua hai to phir encypt karo
+  this.password= await bcrypt.hash(this.password, 10) // for encrepting(conert readable to secret data) the password // agar password change hua hai to phir encypt karo
   next()
 })// a type of hook middleware
 

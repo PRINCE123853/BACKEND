@@ -1,3 +1,5 @@
+// if any error comes when talking to database then gives the error
+
 const asyncHandler = (requestHandler)=>{
  return (req, res , next)=>{
     Promise.resolve(requestHandler(req,res, next)).catch((err)=>next(err))
