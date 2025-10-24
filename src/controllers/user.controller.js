@@ -1,9 +1,16 @@
+
+
+
+
+
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/ApiError.js"
+import { ApiError } from "../utils/ApiError.js"//
 import { User } from "../models/user.models.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
-
+ 
+ 
+ 
 const registerUser = asyncHandler( async ( req , res) => { 
 /*
 //this was just for demo
@@ -24,7 +31,7 @@ const registerUser = asyncHandler( async ( req , res) => {
 // return response
 
 const {fullName , email , username , password} = req.body
-console.log("email", email);
+// console.log("email", email);
 
 // if(fullName === ""){// we can do for everyone like this , learner can do it
 // throw new ApiError(400,"fullname is required")
@@ -37,27 +44,38 @@ console.log("email", email);
    throw new ApiError(400,"All fields are required")
     }
     
-   const existedUser = User.findOne({
+   const existedUser = await User.findOne({
       $or: [{ username }, { email }]
     })
    if(existedUser){
     throw new ApiError(409,"User with email or username already exists")
    }
+
+    // console.log(req.files)
+
+
   // all data comes under "req.body" by express
   // excess of files "req.files" by multer
   const avatarLocalPath = req.files?.avatar[0]?.path;  // work happens by multer (take file and bring at server not cloudinary)     //we are taking 1st properties so "0", so may properties are happens EXPLORE  
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+  // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  let coverImageLocalPath;
+  if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){
+  coverImageLocalPath = req.files.coverImage[0].path
+  }
+
   if(!avatarLocalPath){
     throw new ApiError(400,"Avatar file is required")
   }
   
+
   //now upload from local to cloudinary
   const avatar = await uploadOnCloudinary(avatarLocalPath)
   const coverImage = await uploadOnCloudinary(coverImageLocalPath)
   
   if(!avatar){
      throw new ApiError(400,"Avatar file is required")
-  }
+  } 
 
   //create object and entry in database
  const user = await User.create({
@@ -69,6 +87,10 @@ console.log("email", email);
    username: username.toLowerCase()
   })
    
+
+
+
+
   const createdUser = await User.findById(user._id).select(// for conformation that object is created or not "_id" given by mongodb to all entry
     "-password -refreshToken" //remove unwanted(thoda ajiv syntax hai)
   ) 
@@ -81,5 +103,10 @@ console.log("email", email);
     new ApiResponse(200, createdUser, "User registered Successfully")
   )
 
+
+
 }) 
 export {registerUser,}
+
+
+ 

@@ -1,5 +1,5 @@
-// route means like    ./  , ./profaile , ./profile/temp 
 
+// route means like    ./  , ./profaile , ./profile/temp 
 import {Router} from "express"; // router comes from express
 import { registerUser } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -22,3 +22,10 @@ router.route("/register").post(
 //for postman we have to give route name not file(basic things)// post basic meaning that send data from user , one server to another because this is http method
 
 export default router // dafter defalut we can import anyware as own wish name . if not default then same name
+
+
+
+
+
+
+

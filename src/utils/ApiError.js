@@ -1,4 +1,4 @@
-class Apierror extends Error{// predefine error  "https://nodejs.org/api/errors.html"
+class ApiError extends Error{// predefine error  "https://nodejs.org/api/errors.html"
   constructor(
     statusCode,
     message = "Something went wrong",
@@ -19,4 +19,4 @@ class Apierror extends Error{// predefine error  "https://nodejs.org/api/errors.
    }
   }
 }
-export {Apierror}
+export {ApiError}   // for me only in this page  Apierror ---> ApiError edited 
