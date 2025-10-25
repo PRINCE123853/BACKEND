@@ -29,7 +29,7 @@ const userSchema = new Schema(
     },
     avatar: {
       type: String, // cloudinary url (like aws google cloud)
-      required: true,
+      // required: true,  // after 10h i comment
     },
     coverImage: {
       type: String, // cloudinary url
