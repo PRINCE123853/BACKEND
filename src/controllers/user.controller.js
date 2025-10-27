@@ -341,12 +341,134 @@ const options = {
 
 })
 
+const changeCurrentPassword = asyncHandler(async(req, res)=>{
+  const {oldPassword, newPassword} = req.body
+// password change ho raha hai , old password means aapne jo password aap pahle se use karte aaye ho aur new matlab jisse aap new password set karna chahte ho this is not forgot password
+  const user = await User.findById(req.user?._id) // middleware auth me hamne req.user= user kar rakha hai to id mil jayega
+
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+  if(!isPasswordCorrect){
+    throw new ApiError(400, "Invalid old password")
+  }
+   
+  user.password = newPassword
+ await user.save({validateBeforeSave: false})
+
+   return res
+   .status(200)
+   .json(new ApiResponse(200, {}, "Password changed successfully"))
+
+})
+
+const getCurrentUser = asyncHandler(async(req, res)=>{
+  return res
+  .status(200)
+  .json(200, req.user , "current user fetched successfully")
+})
+
+const updateAccountDetails = asyncHandler(async(req, res)=>{
+  const {fullName,email} = req.body
+  // agar koi file update karna ho to best advice hota hai ki alag se karo ,kyuki pura user save hone par text data bhi baar baar jata hai
+  if(!fullName || !email){
+    throw new ApiError(400 , "All fields are required")
+  }
+
+ const user = User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set:{
+        // fullName: fullName
+        // fullName (thsi both line is right to write)
+        fullName,
+        email: email
+      }
+    },
+    {new: true}//update hone ke baad return value aayega
+  ).select("-password")//password field nhi chahiye. jaisa man kare vaisa kar sakte hai depends upon developer
+   
+  return res
+  .status(200)
+  .json(new ApiResponse(200, user, "Account details updated successfully"))
+
+
+})
+
+
+const updateUserAvatar = asyncHandler(async(req, res)=>{
+  const avatarLocalPath = req.file?.path
+
+  if(!avatarLocalPath){
+  throw new ApiError(400, "Avatar file is missing")
+  }
+
+  const avatar = await uploadOnCloudinary(avatarLocalPath)
+
+  if(!avatar.url){
+    throw new ApiError(400, "Error while uploading on avatar")
+  }
+
+ const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set:{
+        avatar: avatar.url//yaha new avatar me cloudinary par uploaded avatar ka url dal rahe hai
+      }
+    },
+    {new: true}
+  ).select("-password")
+
+    return res
+  .status(200)
+  .json(
+    new ApiResponse(200, user , "Avatar updated successfully")
+  )
+
+})
+
+const updateUserCoverImage = asyncHandler(async(req, res)=>{
+  const coverImageLocalPath = req.file?.path
+
+  if(!coverImageLocalPath){
+  throw new ApiError(400, "Cover image file is missing")
+  }
+
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+
+  if(!coverImage.url){
+    throw new ApiError(400, "Error while uploading on cover image")
+  }
+
+const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set:{
+        coverImage: coverImage.url
+      }
+    },
+    {new: true}
+  ).select("-password")
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, user , "Cover image updated successfully")
+  )
+
+})
+
+
 
 export { 
   registerUser,
   loginUser,
   logoutUser,
-  refreshAccessToken
+  refreshAccessToken,
+  changeCurrentPassword,
+  getCurrentUser,
+  updateAccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage
  };
 
 
