@@ -134,6 +134,9 @@ import { User } from "../models/user.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
+import mongoose from "mongoose";
+
+
 
 const generateAccessAndRefereshTokens =  async(userId)=>{
 try {
@@ -364,7 +367,7 @@ const changeCurrentPassword = asyncHandler(async(req, res)=>{
 const getCurrentUser = asyncHandler(async(req, res)=>{
   return res
   .status(200)
-  .json(200, req.user , "current user fetched successfully")
+  .json(new ApiResponse(200, req.user , " user fetched successfully"))
 })
 
 const updateAccountDetails = asyncHandler(async(req, res)=>{
@@ -374,7 +377,7 @@ const updateAccountDetails = asyncHandler(async(req, res)=>{
     throw new ApiError(400 , "All fields are required")
   }
 
- const user = User.findByIdAndUpdate(
+ const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set:{
@@ -401,6 +404,8 @@ const updateUserAvatar = asyncHandler(async(req, res)=>{
   if(!avatarLocalPath){
   throw new ApiError(400, "Avatar file is missing")
   }
+
+  //TODO delete old image - assignment
 
   const avatar = await uploadOnCloudinary(avatarLocalPath)
 
@@ -457,6 +462,146 @@ const user = await User.findByIdAndUpdate(
 
 })
 
+const getUserChannelProfile = asyncHandler(async(req, res)=>{
+  const {username} = req.params //not req.body we are taking url so req.params
+  if(!username?.trim()){
+    throw new ApiError(400, "username is missing")
+  }
+
+  const channel = await User.aggregate([
+    {
+      $match:{
+        username: username?.toLowerCase()
+      }
+    },
+    {
+      // find the subscriber of a channel
+      $lookup:{
+        from:"subscriptions",//Subscription be remember all in lowercase and plural
+        localField:"_id",
+        foreignField:"channel",
+        as: "subscribers"
+
+      }
+    },
+    {
+      // find subscribed by me
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"subscriber",
+        as: "subscribedTo"
+      }
+    },
+    {
+      $addFields:{
+        subscribersCount:{
+        $size: "$subscribers" 
+        },
+       channelSubscribedToCount:{
+       $size: "$subscribedTo"
+       },
+       isSubscribed:{
+        $cond:{
+          if:{$in: [req.user?._id, "$subscribers.subscriber"]},// "$in" can find in arrays and objects both
+          then: true,
+          else: false
+        }
+       }
+      }
+    },
+    {
+      // what is to prject on user profile 
+      $project:{
+        fullName: 1,
+        username: 1,
+        subscribersCount: 1,
+        channelSubscribedToCount: 1,
+        isSubscribed: 1,
+        avatar: 1,
+        coverImage: 1,
+        email: 1
+      }
+    }
+
+
+
+
+  ])//after pipilene valoue comes form of array
+  // we can see more detail abd deep after "console.log(channel);""
+
+  if(!channel?.length){
+  throw new ApiError(404, "channel does not exists")
+  }
+   
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, channel[0], "User channel fetched successfully")
+  )
+
+})
+
+
+const getWatchHistory = asyncHandler(async(req, res)=>{
+
+  // req.user._id // mock question= req.user se string milta hai mongoose ke through vo id me convert ho jata hai
+  const user = await User.aggregate([
+    {
+      $match:{
+        // _id: req.user._id // ye nhi likhenge kyuki yaha mongoose kaam nhi karta hai aggregation pipeline ka code directly database me store hota hai
+      _id: new mongoose.Types.ObjectId(req.user._id)
+      
+    }
+    },
+    {
+     $lookup:{
+      from: "videos",
+      localField:"watchHistory",
+      foreignField: "_id",
+      as: "watchHistory",
+      pipeline:[
+        {
+        $lookup:{
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "owner",
+         pipeline:[
+          {
+            $project:{ // owner ke andar hai ye isiliye jitna bhi store hoga project data sab owner me hi hoga
+              fullName: 1,
+              username:1,
+              avatar: 1
+
+            }
+          }
+         ]
+        }
+        },
+        {
+          $addFields:{
+            owner:{
+              $first: "$owner" // array ka first value nikalkar bhi kar sakte the aur aeise bhi kar sakte hai
+            }
+          }
+        }
+      ]
+     }
+    }
+  ])
+
+   return res
+   .status(200)
+   .json(
+    new ApiResponse(
+      200,
+      user[0].watchHistory,// agar pura user bhejte to bahut sara information jayega jabki "0" par hi hamara watch history mil jayega. 
+      "Watch history fetched successfully"
+    )
+   )
+
+})
 
 
 export { 
@@ -468,7 +613,9 @@ export {
   getCurrentUser,
   updateAccountDetails,
   updateUserAvatar,
-  updateUserCoverImage
+  updateUserCoverImage,
+  getUserChannelProfile,
+  getWatchHistory
  };
 
 
