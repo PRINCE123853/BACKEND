@@ -23,7 +23,7 @@ export const verifyJWT = asyncHandler(async(req, _, next)=>{
   throw new ApiError(401 , "Invalid Access Token")
  }
  
- req.user = user;// is page ka middleware use hone ke baad bar bar req.user ke andar user ka current condition bhej raha hai. V.V.I line
+ req.user = user;// is page ka middleware use hone ke baad bar bar req.user ke andar user ka current condition bhej raha hai. V.V.I line(token ka use karke req.user ke andar hi sara information daal diye)
  next()
   }catch(error){
  throw new ApiError(401 , error?.message || "Invalid access token")

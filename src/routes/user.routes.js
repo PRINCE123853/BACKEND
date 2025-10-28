@@ -9,7 +9,7 @@ import {
   refreshAccessToken, 
   changeCurrentPassword, 
   getCurrentUser, 
-  updateAccountDetails, // vdo X
+  updateAccountDetails, 
   updateUserAvatar, 
   updateUserCoverImage, 
   getUserChannelProfile, 
@@ -17,7 +17,7 @@ import {
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js"; 
-// import { JsonWebTokenError } from "jsonwebtoken";
+// import { JsonWebTokenError } from "jsonwebtoken"; // no use
 
 
 
